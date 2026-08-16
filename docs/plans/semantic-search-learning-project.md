@@ -88,6 +88,20 @@ it's not valuable study time. I write the full corpus; he reviews and steers.
 4. No manifest/metadata file yet — that's introduced in Phase 2 when we design chunking
    and need per-doc IDs.
 
+## Update log
+
+- **2026-08-16:** Corpus authoring reassigned solely to Claude (see Phase 1 note
+  above). Repo created as **public** at github.com/Trio2112/AzureChatWithDocs, pushed
+  to `main`. Brent added new standing requirements: no secrets in code (Key Vault for
+  anything sensitive), and every Azure resource this project uses must be creatable
+  and destroyable via one standup script and one teardown script, portable to a
+  different Azure subscription. This is substantial enough to be its own phase — the
+  roadmap now has a new **Phase 3: Infra foundation** before any resource gets
+  provisioned (Azure OpenAI/Cosmos DB/Container Apps phases shift down accordingly).
+  **`docs/roadmap.md` is the live source of truth for phase numbering and status from
+  here on** — this file's roadmap table above reflects the plan as originally
+  approved, not the current state.
+
 ## Verification
 
 - `dotnet build` on the new solution succeeds with three empty-but-wired-up projects.
