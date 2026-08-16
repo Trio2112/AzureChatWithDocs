@@ -7,7 +7,7 @@ work — not just review finished code. Check off phases as we complete them.
 | # | Phase | Exam relevance | Status |
 |---|---|---|---|
 | 0 | Repo scaffolding, solution structure, roadmap doc | — | ✅ Done |
-| 1 | Mock HTML corpus (IT/HR docs), authored together | Content prep for RAG | 🔜 In progress |
+| 1 | Mock HTML corpus (IT/HR docs) | Content prep for RAG | ✅ Done |
 | 2 | Chunking strategy (library in `Shared`) | Chunking/indexing strategies | ⬜ Not started |
 | 3 | Provision Azure OpenAI (Bicep), call embeddings API, inspect vectors | Azure OpenAI resource/deployment | ⬜ Not started |
 | 4 | Provision Cosmos DB NoSQL (Bicep, serverless, vector index policy), upsert chunks+vectors | Cosmos DB vector indexing | ⬜ Not started |
