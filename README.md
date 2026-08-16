@@ -40,7 +40,7 @@ statement of what risk was accepted and what mitigates it.
 blog post: the corpus was measured first (every `<h2>` section is 46–158 tokens, so the
 real problem is *merging* undersized sections, not splitting oversized ones), and chunk
 budgets are counted in real `cl100k_base` tokens rather than a `chars/4` approximation.
-Phase 7 then re-tests that choice against a golden question set instead of trusting it.
+Phase 8 then re-tests that choice against a golden question set instead of trusting it.
 
 **Retrieval quality is measured.** A RAG system whose retrieval quality nobody has
 quantified is a demo. The evaluation harness is a first-class phase positioned right
@@ -101,9 +101,9 @@ src/            .NET 10 solution
   Shared.Tests/ xUnit tests + fixtures for the chunking library
   Ingestion/    Console app: chunk content, generate embeddings, upsert to Cosmos DB
   Api/          ASP.NET Core minimal API: chat endpoint + static chat UI (wwwroot)
-infra/          Bicep infrastructure-as-code (Phase 3)
-eval/           Golden question set + retrieval metrics harness (Phase 7)
-.github/        GitHub Actions CI/CD (Phase 15)
+infra/          Bicep infrastructure-as-code (Phase 4)
+eval/           Golden question set (Phase 3) + retrieval metrics harness (Phase 8)
+.github/        GitHub Actions CI (Phase 4) and CD (Phase 17)
 docs/
   roadmap.md    Phase-by-phase plan and current status
   plans/        Per-phase decision records
@@ -132,5 +132,5 @@ dotnet test    src/AzureChatWithDocs.slnx
 
 A dev-only learning project. Wherever Azure offers a choice we take the
 cheapest/serverless/burstable tier, and resources are torn down when not in active use
-(`azd down`). Phase 10 replaces this paragraph with measured numbers — per-query cost,
+(`azd down`). Phase 12 replaces this paragraph with measured numbers — per-query cost,
 per-reindex cost, and what both look like at 10× and 100× the corpus.
