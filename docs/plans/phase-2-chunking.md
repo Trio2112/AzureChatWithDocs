@@ -273,6 +273,52 @@ file is `.slnx`.
 
 **Branch** — `phase-2-chunking`, per `CONTRIBUTING.md`.
 
+## Implementation traps
+
+Written for whoever implements this, possibly in a fresh session with no memory of the
+planning conversation. Each of these produces code that satisfies the plan as written
+and is still wrong.
+
+**1. `ProfileId` and the hashes must use a stable hash function.** `string.GetHashCode()`
+is randomized per process in .NET Core and later — it returns a different value on every
+run. Using it anywhere near `ProfileId`, `SourceHash` or `ChunkHash` makes chunk IDs
+change between runs, breaks the byte-identical re-run check in Verification, and would
+silently defeat Phase 17's change detection by marking every document as modified every
+time. Use SHA-256 over a canonical, explicitly-ordered serialization of the inputs.
+
+**2. Normalize line endings before hashing.** This repo has `core.autocrlf=true`, no
+`.gitattributes`, and CRLF in the index. A hash computed over raw file bytes therefore
+differs between a Windows dev machine and Linux CI, which again marks every document as
+changed. Normalize to `
+` (and trim trailing whitespace) before hashing, and add a
+`.gitattributes` normalizing `*.html` so the working tree stops drifting.
+
+**3. Fail closed is the whole point, and the habitual implementation is the bug.** The
+reflex when metadata is missing is to default to permissive — `?? "public"`, or treating
+an empty label list as "matches everyone". Both are the exact vulnerability this design
+exists to prevent. No tag means no access, and the document is *rejected* at ingest. If
+a test can be made to pass by defaulting to public, the test is wrong, not the rule.
+
+**4. Security labels must survive the merge path, not just the split path.** Propagating
+labels when splitting an oversized section is the obvious case and easy to get right.
+Merging several sections into one chunk is the case that gets forgotten — every
+resulting chunk must carry the document's labels, and labels must never be unioned
+across documents. Assert per-chunk, never per-document: one unlabelled chunk is a leak.
+
+**5. Verify by running, not by reasoning.** Three assumptions in this plan were not
+executed and may be wrong: that `NuGetAudit`/`NuGetAuditMode=all` behave as described on
+the .NET 10 SDK (they may already be defaults), that `packages.lock.json` cooperates with
+the `.slnx` solution format, and that `dotnet new xunit` adds cleanly to `.slnx`. Run
+them; if reality differs, adjust and say so in the phase's decision record rather than
+working around it silently.
+
+**6. Commit incrementally, in this order.** This phase grew well beyond "write a
+chunker" and may not fit one session. Sequence so that stopping early still leaves the
+branch coherent: (a) supply-chain config and test project scaffolding, (b) parser +
+models, (c) packer with tests, (d) long fixture and split-path tests, (e) corpus
+retagging and new restricted documents, (f) CLI, (g) docs. Do not merge to `main`
+without the walkthrough in step 8 of Verification.
+
 ## Verification
 
 ```bash
