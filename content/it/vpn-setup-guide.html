@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>VPN Setup Guide</title>
+  <meta name="category" content="IT">
+</head>
+<body>
+  <h1>VPN Setup Guide</h1>
+
+  <h2>Overview</h2>
+  <p>
+    Contoso uses GlobalProtect to provide secure remote access to internal systems.
+    This guide covers installing the client, connecting for the first time, and
+    troubleshooting common connection issues. All remote employees are required to use
+    the VPN when accessing internal resources, per the HR remote work policy.
+  </p>
+
+  <h2>Installing the client</h2>
+  <p>
+    Download the GlobalProtect installer from the software portal at
+    software.contoso.internal. Run the installer with default settings. When prompted
+    for a gateway address, enter vpn.contoso.internal. Restart your laptop after
+    installation completes.
+  </p>
+
+  <h2>Connecting</h2>
+  <p>
+    Open GlobalProtect from the system tray and sign in with your corporate email and
+    password. You will be prompted for multi-factor authentication via the Authenticator
+    app. Once connected, the icon in your system tray turns green. Connection typically
+    takes under 15 seconds.
+  </p>
+
+  <h2>Troubleshooting</h2>
+  <p>
+    If the client shows "Unable to connect," first confirm you have an active internet
+    connection outside the VPN. If the problem persists, clear the client's cached
+    credentials via Settings &gt; Reset, then reconnect. For persistent failures, open
+    a ticket with the IT help desk and include the error code shown in the client logs.
+  </p>
+</body>
+</html>

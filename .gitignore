@@ -1,0 +1,30 @@
+# .NET build output
+bin/
+obj/
+out/
+
+# Visual Studio / Rider / VS Code
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+
+# Local settings that may contain secrets (API keys, connection strings)
+appsettings.Development.json
+appsettings.*.local.json
+*.env
+.env
+local.settings.json
+
+# Azure Functions / Azurite
+__azurite_db*__.json
+__blobstorage__/
+__queuestorage__/
+
+# Docker
+*.log
+
+# OS cruft
+.DS_Store
+Thumbs.db
