@@ -15,7 +15,7 @@ whole-document vector is the centroid of every topic in the doc, so `pto-policy.
 and `benefits-overview.html` both read as "generic HR blur" and neither is
 convincingly close to *"how many PTO days carry over?"*. A 113-token
 `[Carryover and payout]` chunk is almost entirely about carryover, and wins
-decisively. Secondarily, it keeps the Phase 7 chat prompt affordable.
+decisively. Secondarily, it keeps the Phase 8 chat prompt affordable.
 
 **What the corpus measurements told us.** Every `<h2>` section in the current corpus
 is 46–158 tokens — nothing comes close to a 500-token cap. So on today's content the
@@ -145,14 +145,30 @@ the title, then its body. A merged chunk simply lists more than one section.
 
 **New — `src/Shared/Chunking/`**
 
-- `ChunkingOptions.cs` — `TargetTokens=350`, `MaxTokens=500`, `MinTokens=80`,
-  `OverlapTokens=50`, `EmbeddingModel="text-embedding-3-small"`. Options object from
-  day one; these knobs get retuned once Phase 6 shows real retrieval quality.
+- `ChunkingOptions.cs` — `StrategyName`, `TargetTokens=350`, `MaxTokens=500`,
+  `MinTokens=80`, `OverlapTokens=50`, `EmbeddingModel="text-embedding-3-small"`, plus a
+  derived **`ProfileId`**: a short stable hash of the whole settings object. Any change
+  to a knob yields a new `ProfileId`. Options object from day one; these knobs get
+  retuned once Phase 7's eval harness gives us measured retrieval quality.
 - `SourceDocument.cs` / `DocumentSection.cs` — parse output records.
-- `Chunk.cs` — `Id` (`{DocumentId}#{Ordinal:D4}`), `DocumentId`, `Title`, `Category`,
-  `RelativePath`, `HeadingPath`, `Ordinal`, `Text`, `TokenCount`, `ContentHash`.
-  `ContentHash` (SHA-256 of `Text`) is deliberate groundwork for Phase 10's
-  content-diffing re-vectorization pipeline.
+- `Chunk.cs` — `Id` (**`{ProfileId}:{DocumentId}#{Ordinal:D4}`**), `ProfileId`,
+  `DocumentId`, `Title`, `Category`, `RelativePath`, `HeadingPath`, `Ordinal`, `Text`,
+  `TokenCount`, `SourceHash`, `ChunkHash`.
+
+**Why the ID and hashes are shaped this way** (added after the roadmap reweighting):
+
+- **`ProfileId` in the chunk ID** lets two chunking configurations be indexed *side by
+  side in the same Cosmos container* without collision. Phase 7 can then A/B
+  350/500 against, say, 200/300 on identical questions and compare recall@k directly —
+  no destructive reindex, no second environment, and the losing profile is deleted by
+  filtering on one field. Retrofitting this after documents are embedded would mean
+  re-embedding the whole corpus, so it costs nothing now and a lot later.
+- **Two hashes, not one.** `SourceHash` (SHA-256 of the source document's normalized
+  text) answers *"did the document change?"* — that is what drives Phase 14's
+  re-vectorization diffing. `ChunkHash` (SHA-256 of the chunk's own `Text`) answers
+  *"did this particular chunk change?"*, so a one-section edit re-embeds one chunk
+  instead of the document's worth. Collapsing these into a single hash would make the
+  two questions indistinguishable, which is exactly the bug Phase 14 exists to avoid.
 - `ITokenCounter.cs` + `TiktokenTokenCounter.cs` — wraps
   `TiktokenTokenizer.CreateForModel("text-embedding-3-small")`. The interface lets
   tests use a deterministic fake instead of loading the real vocab.
@@ -169,7 +185,7 @@ the title, then its body. A merged chunk simply lists more than one section.
   `<NuGetAuditLevel>low</NuGetAuditLevel>`. Applied solution-wide rather than per
   project so future phases inherit it.
 - `packages.lock.json` per project, committed. Pins the transitive closure by hash;
-  CI in Phase 11 can then restore with `--locked-mode` for verifiable builds.
+  CI in Phase 15 can then restore with `--locked-mode` for verifiable builds.
 - `nuget.config` at repo root — package source mapping binding `AngleSharp` and
   `Microsoft.ML.*` to nuget.org only, so a private or upstream feed added in a later
   phase cannot shadow them.
@@ -183,7 +199,13 @@ Cases: heading-path construction incl. deep nesting; empty heading container dro
 table kept intact under cap; oversized table split with header repeated; small
 sections merged toward target; no chunk exceeds `MaxTokens`; oversized section splits
 with correct overlap; overlap text actually appears in both neighbours; chunk IDs
-stable and ordinal-ordered; same input ⇒ same `ContentHash`.
+stable and ordinal-ordered; same input ⇒ same `SourceHash`/`ChunkHash`.
+
+Profile/eval-readiness cases: identical options ⇒ identical `ProfileId`; changing any
+single knob ⇒ different `ProfileId`; two profiles over the same corpus produce
+non-colliding chunk IDs; editing one section changes that chunk's `ChunkHash` and the
+document's `SourceHash` but leaves sibling chunks' hashes untouched (the property
+Phase 14's incremental reindexing depends on).
 
 **New — `src/Shared.Tests/Fixtures/long-policy.html`** — synthetic, well-formatted,
 ~5000 tokens with deep nesting and an oversized table. This is the only thing in the
@@ -223,7 +245,7 @@ Then confirm by inspection:
    overlap is visible between consecutive parts of a split section, and that the
    oversized table's parts each carry the header row.
 5. Re-run and diff `chunks.json` — byte-identical, confirming IDs and hashes are
-   deterministic (a prerequisite for Phase 10).
+   deterministic (a prerequisite for Phase 14).
 6. Confirm `packages.lock.json` files are committed and that `--locked-mode` restore
    succeeds from clean (`git clean -xdf` on a scratch clone), proving the build is
    reproducible from pinned hashes.
