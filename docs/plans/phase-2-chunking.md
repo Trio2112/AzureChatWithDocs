@@ -169,13 +169,13 @@ the title, then its body. A merged chunk simply lists more than one section.
   filtering on one field. Retrofitting this after documents are embedded would mean
   re-embedding the whole corpus, so it costs nothing now and a lot later.
 - **Two hashes, not one.** `SourceHash` (SHA-256 of the source document's normalized
-  text) answers *"did the document change?"* — that is what drives Phase 16's
+  text) answers *"did the document change?"* — that is what drives Phase 17's
   re-vectorization diffing. `ChunkHash` (SHA-256 of the chunk's own `Text`) answers
   *"did this particular chunk change?"*, so a one-section edit re-embeds one chunk
   instead of the document's worth. Collapsing these into a single hash would make the
-  two questions indistinguishable, which is exactly the bug Phase 16 exists to avoid.
+  two questions indistinguishable, which is exactly the bug Phase 17 exists to avoid.
 - **`SecurityLabels` on every chunk**, denormalized from the source document rather
-  than looked up at query time. Phase 10 enforces authorization as a predicate *inside*
+  than looked up at query time. Phase 11 enforces authorization as a predicate *inside*
   the Cosmos vector query — filtering after retrieval leaks the existence of restricted
   documents and silently degrades answers, because the top-k slots were spent on results
   that then got discarded. An in-query predicate requires the label to live on the
@@ -193,23 +193,24 @@ invisible to every caller, and nobody would know why answers were missing. So th
 ingest pipeline **rejects** such a document rather than indexing an unreachable one —
 it is skipped, logged with its path and reason, and counted in the CLI summary as
 `rejected`. A non-zero rejected count is a visible, actionable signal, and in Phase 4's
-CI it fails the build. (Phase 15 revisits this as one case in the broader
+CI it fails the build. (Phase 16 revisits this as one case in the broader
 malformed-document story; here the rule is simply strict.)
 
-**Corpus work in this phase:**
-
-- All 10 existing documents need an explicit `<meta name="access" content="...">` tag
-  added. Under fail-closed they are currently *all* unreachable, which is the correct
-  behavior and the reason this is a Phase 2 task rather than a Phase 10 one.
-- Add two or three deliberately restricted documents (e.g. compensation bands, an HR
-  investigation summary) with a non-public label. Without them the unrestricted path is
-  the only one ever exercised, and Phase 8's eval has nothing to assert a non-leak
-  against.
 - `ITokenCounter.cs` + `TiktokenTokenCounter.cs` — wraps
   `TiktokenTokenizer.CreateForModel("text-embedding-3-small")`. The interface lets
   tests use a deterministic fake instead of loading the real vocab.
 - `HtmlDocumentParser.cs`, `SectionPacker.cs`, `IChunker.cs` + `HtmlChunker.cs`.
 - Delete `src/Shared/Class1.cs`.
+
+**Corpus work in this phase:**
+
+- All 10 existing documents need an explicit `<meta name="access" content="...">` tag
+  added. Under fail-closed they are currently *all* unreachable, which is the correct
+  behavior and the reason this is a Phase 2 task rather than a Phase 11 one.
+- Add two or three deliberately restricted documents (e.g. compensation bands, an HR
+  investigation summary) with a non-public label. Without them the unrestricted path is
+  the only one ever exercised, and Phase 8's eval has nothing to assert a non-leak
+  against.
 
 **Packages** — `AngleSharp` 1.7.1 (Shared), `Microsoft.ML.Tokenizers` 2.0.0 +
 `Microsoft.ML.Tokenizers.Data.Cl100kBase` 2.0.0 (Shared).
@@ -241,7 +242,7 @@ Profile/eval-readiness cases: identical options ⇒ identical `ProfileId`; chang
 single knob ⇒ different `ProfileId`; two profiles over the same corpus produce
 non-colliding chunk IDs; editing one section changes that chunk's `ChunkHash` and the
 document's `SourceHash` but leaves sibling chunks' hashes untouched (the property
-Phase 16's incremental reindexing depends on).
+Phase 17's incremental reindexing depends on).
 
 Access-control cases, all asserting fail-closed behavior: `<meta name="access">` parsed
 into `SecurityLabels`; a document with **no** access tag is rejected, not indexed; a
@@ -264,9 +265,11 @@ Add `artifacts/` to `.gitignore`.
 `<meta name="category">`, **required `<meta name="access">`**, heading nesting rules,
 tables must have `<thead>`) so future documents stay chunkable by construction. The
 access tag is documented as mandatory and fail-closed: omit it and the document is
-rejected at ingest rather than published to everyone. Update `docs/roadmap.md` (Phase 2 → ✅). Update `README.md` repo
-layout and "Running it" — and fix the existing `src/AzureChatWithDocs.sln` reference,
-which is wrong; the file is `.slnx`.
+rejected at ingest rather than published to everyone.
+
+Update `docs/roadmap.md` (Phase 2 → ✅). Update `README.md` repo layout and "Running
+it" — and fix the existing `src/AzureChatWithDocs.sln` reference, which is wrong; the
+file is `.slnx`.
 
 **Branch** — `phase-2-chunking`, per `CONTRIBUTING.md`.
 
@@ -296,7 +299,7 @@ Then confirm by inspection:
    overlap is visible between consecutive parts of a split section, and that the
    oversized table's parts each carry the header row.
 6. Re-run and diff `chunks.json` — byte-identical, confirming IDs and hashes are
-   deterministic (a prerequisite for Phase 16).
+   deterministic (a prerequisite for Phase 17).
 7. Confirm `packages.lock.json` files are committed and that `--locked-mode` restore
    succeeds from clean (`git clean -xdf` on a scratch clone), proving the build is
    reproducible from pinned hashes.

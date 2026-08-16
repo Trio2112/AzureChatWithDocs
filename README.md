@@ -42,11 +42,24 @@ real problem is *merging* undersized sections, not splitting oversized ones), an
 budgets are counted in real `cl100k_base` tokens rather than a `chars/4` approximation.
 Phase 8 then re-tests that choice against a golden question set instead of trusting it.
 
-**Retrieval quality is measured.** A RAG system whose retrieval quality nobody has
-quantified is a demo. The evaluation harness is a first-class phase positioned right
-after retrieval works, so chunking and top-k are tuned against recall@k and MRR. Chunk
-records carry a chunking-profile ID specifically so competing strategies can be indexed
-side by side and compared without a destructive reindex.
+**Quality is measured twice, because there are two ways to be wrong.** A RAG system
+whose quality nobody has quantified is a demo. *Retrieval* eval (Phase 8) asks whether
+the right chunks were found — recall@k and MRR against a golden question set authored
+before any Azure resource existed. *Groundedness* eval (Phase 10) asks whether the model
+then stayed inside them, because retrieval can be perfect and the answer can still
+invent a number. That one decomposes answers into individual claims, checks citation
+accuracy, and verifies the system refuses when the corpus has no answer — and it
+validates the LLM judge against human labels, since an unvalidated judge is a random
+number generator with a confident tone. Chunk records carry a chunking-profile ID so
+competing strategies can be indexed side by side and compared without a destructive
+reindex.
+
+**Authorization is enforced inside the query, and fails closed.** Documents carry
+security labels that become a predicate in the vector search itself — not a filter
+applied to results afterward, which leaks the existence of restricted documents and
+silently degrades answers by spending top-k slots on discarded hits. A document with no
+access tag is readable by nobody and is rejected at ingest rather than published to
+everyone: absence of metadata is never a grant.
 
 **Operability is designed in, not appended.** Observability lands with the API phase,
 not in a stretch goal: retrieval traces, token spend per request, latency breakdown,
@@ -102,8 +115,9 @@ src/            .NET 10 solution
   Ingestion/    Console app: chunk content, generate embeddings, upsert to Cosmos DB
   Api/          ASP.NET Core minimal API: chat endpoint + static chat UI (wwwroot)
 infra/          Bicep infrastructure-as-code (Phase 4)
-eval/           Golden question set (Phase 3) + retrieval metrics harness (Phase 8)
-.github/        GitHub Actions CI (Phase 4) and CD (Phase 17)
+eval/           Golden question set (Phase 3), retrieval metrics (Phase 8),
+                groundedness/citation metrics (Phase 10)
+.github/        GitHub Actions CI (Phase 4) and CD (Phase 18)
 docs/
   roadmap.md    Phase-by-phase plan and current status
   plans/        Per-phase decision records
@@ -132,5 +146,5 @@ dotnet test    src/AzureChatWithDocs.slnx
 
 A dev-only learning project. Wherever Azure offers a choice we take the
 cheapest/serverless/burstable tier, and resources are torn down when not in active use
-(`azd down`). Phase 12 replaces this paragraph with measured numbers — per-query cost,
+(`azd down`). Phase 13 replaces this paragraph with measured numbers — per-query cost,
 per-reindex cost, and what both look like at 10× and 100× the corpus.

@@ -29,24 +29,25 @@ epilogue.
 | 0 | Repo scaffolding, solution structure, roadmap | — | ✅ Done |
 | 1 | Mock HTML corpus (IT/HR docs) | Content prep for RAG | ✅ Done |
 | 2 | Chunking strategy (`Shared` library) + supply-chain hardening | Chunking/indexing strategies | 🚧 In progress |
-| 3 | **Golden question set** — 30–40 questions with expected source sections, authored against the corpus. No Azure spend | Evaluation groundwork | ⬜ |
+| 3 | **Golden question set** — 30–40 questions with expected source sections, expected supporting facts, unanswerable questions, and questions answerable only from restricted documents. Authored against the corpus, no Azure spend | Evaluation groundwork | ⬜ |
 | 4 | **Infra foundation:** portable standup/teardown (`azd` + Bicep), Key Vault, no secrets in code — **plus minimal CI** (build + test on PR) | Infra-as-code, secrets management | ⬜ |
 | 5 | Azure OpenAI provisioning, embeddings API, inspect vectors | Azure OpenAI resource/deployment | ⬜ |
 | 6 | Cosmos DB NoSQL (serverless, vector index policy), upsert chunks+vectors | Cosmos DB vector indexing | ⬜ |
 | 7 | Vector search queries + RAG retrieval logic | Vector search / retrieval patterns | ⬜ |
 | 8 | **RAG evaluation harness** — runs the Phase 3 questions, reports recall@k and MRR, A/Bs chunking profiles. Wired into CI as a gate | Production practice | ⬜ |
 | 9 | Chat API (ASP.NET Core minimal API: retrieve + chat completion) | RAG orchestration | ⬜ |
-| 10 | **Identity & document-level access control** — Entra ID auth, security trimming enforced *inside* the vector query | Enterprise RAG / security | ⬜ |
-| 11 | **Observability** — App Insights, retrieval traces, token spend per request, latency breakdown, grounding failures | Monitoring AI solutions | ⬜ |
-| 12 | **Cost model & scale analysis** — measured per-query and per-reindex cost, 10× and 100× projections, budget alerts | Capacity/cost planning | ⬜ |
-| 13 | Frontend chat UI (vanilla HTML/JS) with citations back to source docs | — | ⬜ |
-| 14 | Dockerfile + Azure Container Apps hosting | Container Apps hosting path | ⬜ |
-| 15 | **Failure modes & resilience** — empty retrieval, 429 backoff, malformed docs, embedding model version drift, partial index state | Reliability practice | ⬜ |
-| 16 | Re-vectorization pipeline for added/changed content (hash diffing; Function w/ Blob trigger) | Event-driven ingestion | ⬜ |
-| 17 | Full CI/CD (build/test/eval gates → image → Container Apps) | — | ⬜ |
-| 18+ | Stretch: PostgreSQL/pgvector comparison; hybrid search; reranking; answer-groundedness eval | Postgres path | ⬜ |
+| 10 | **Answer-groundedness eval** — is every claim in the answer supported by retrieved context? Plus citation accuracy, refusal on unanswerable questions, and validation of the judge itself | Responsible AI / evaluation | ⬜ |
+| 11 | **Identity & document-level access control** — Entra ID auth, security trimming enforced *inside* the vector query | Enterprise RAG / security | ⬜ |
+| 12 | **Observability** — App Insights, retrieval traces, token spend per request, latency breakdown, grounding failures | Monitoring AI solutions | ⬜ |
+| 13 | **Cost model & scale analysis** — measured per-query and per-reindex cost, 10× and 100× projections, budget alerts | Capacity/cost planning | ⬜ |
+| 14 | Frontend chat UI (vanilla HTML/JS) with citations back to source docs | — | ⬜ |
+| 15 | Dockerfile + Azure Container Apps hosting | Container Apps hosting path | ⬜ |
+| 16 | **Failure modes & resilience** — empty retrieval, 429 backoff, malformed docs, embedding model version drift, partial index state | Reliability practice | ⬜ |
+| 17 | Re-vectorization pipeline for added/changed content (hash diffing; Function w/ Blob trigger) | Event-driven ingestion | ⬜ |
+| 18 | Full CI/CD (build/test/eval gates → image → Container Apps) | — | ⬜ |
+| 19+ | Stretch: PostgreSQL/pgvector comparison; hybrid search; reranking | Postgres path | ⬜ |
 
-## Document-level access control (Phase 10, but decided earlier)
+## Document-level access control (Phase 11, but decided earlier)
 
 This is the single most common reason enterprise RAG pilots stall at security review,
 and it cannot be bolted on afterwards.
@@ -75,12 +76,52 @@ That constrains decisions in earlier phases, so they're made now rather than rev
 - **Phase 8** — the golden question set includes questions whose answers live in
   restricted documents. The eval asserts an unauthorized caller gets *no* leak, not
   merely a lower score.
-- **Phase 10** — Entra ID supplies real group membership, and an end-to-end test proves
+- **Phase 11** — Entra ID supplies real group membership, and an end-to-end test proves
   a restricted document never reaches an unauthorized caller.
+
+## Answer groundedness (Phase 10)
+
+Phase 8 measures whether retrieval found the right chunks. Phase 10 measures whether the
+model actually stayed inside them. These are different failures, and the second one is
+the one that reaches users: retrieval can be perfect and the answer still invents a
+carryover cap that appears nowhere in the corpus. "Did it hallucinate" is also the first
+question anyone outside engineering asks, so it is not a stretch goal.
+
+Four things get measured, and only the first is what people usually mean by
+"groundedness":
+
+1. **Groundedness / faithfulness** — decompose the answer into individual claims and
+   check each against the retrieved context. Claim-level, not answer-level: a response
+   that is 90% supported and 10% fabricated scores badly, which is correct, because the
+   fabricated 10% is what causes harm.
+2. **Citation accuracy** — does the cited source actually contain the claim attributed
+   to it? Distinct from groundedness and cheaply checkable. A confidently wrong citation
+   is worse than no citation, because it manufactures false trust.
+3. **Refusal on unanswerable questions** — the corpus cannot answer everything. The
+   correct response to "what is the 401k match?" when no document covers it is "I don't
+   know," not a plausible number. Phase 3's question set includes deliberately
+   unanswerable questions for exactly this.
+4. **Refusal on unauthorized questions** — a caller without the right label asking about
+   compensation bands must get a refusal, not a hedge and not a partial answer. This is
+   the eval-side counterpart to Phase 11's enforcement.
+
+**Tooling:** `Microsoft.Extensions.AI.Evaluation.Quality` (10.9.0, first-party, from
+`dotnet/extensions`) ships a `Groundedness` evaluator alongside Relevance, Retrieval,
+Completeness and Equivalence. `Microsoft.Extensions.AI.Evaluation.Reporting` caches LLM
+responses and stores results, which matters because an eval you re-run on every CI build
+is a recurring token bill. Use the first-party evaluators rather than hand-rolling a
+judge; the interesting work is the question set and the validation, not the prompt.
+
+**Validate the judge.** This is the part most teams skip. An LLM-as-judge that has not
+been checked against human labels is a random number generator with a confident tone —
+it will produce a number, that number will move between runs, and nobody will know
+whether a regression is real. Hand-label a sample of answers, measure agreement with the
+judge, and record it. If agreement is poor, the judge is the thing to fix before any
+score it emits means anything. Phase 10 is not done until that agreement figure exists.
 
 ## Anti-drift mechanisms
 
-Phases 8, 11, 12 and 15 are the ones that make this a system rather than a demo. They
+Phases 8, 10, 12, 13 and 16 are the ones that make this a system rather than a demo. They
 are also the ones most likely to be quietly deferred, because by the time they come due
 there is a working chatbot and the interesting part feels finished. These are the
 structural defenses, not good intentions:
@@ -102,24 +143,26 @@ suggestions; a phase is not done until they hold:
 | Phase | Cannot be marked done until |
 |---|---|
 | 9 — Chat API | the Phase 8 eval harness runs against it end-to-end and reports a baseline |
-| 13 — Frontend | every answer renders citations resolving to a real source section |
-| 14 — Container Apps | Phase 11 traces are visible from the deployed instance, not just locally |
-| 16 — Re-vectorization | Phase 15's malformed-document and partial-index cases are covered |
-| 17 — CI/CD | the eval gate fails the build on a recall@k regression beyond an agreed threshold |
+| 10 — Groundedness eval | the judge itself has been validated against human labels on a sample |
+| 11 — Access control | a restricted-document question returns a refusal, with no leak, under eval |
+| 14 — Frontend | every answer renders citations resolving to a real source section |
+| 15 — Container Apps | Phase 12 traces are visible from the deployed instance, not just locally |
+| 17 — Re-vectorization | Phase 16's malformed-document and partial-index cases are covered |
+| 18 — CI/CD | the eval gate fails the build on a recall@k *or* groundedness regression beyond an agreed threshold |
 
-**4. Instrument continuously; Phase 11 is the coherence pass, not the first pass.**
+**4. Instrument continuously; Phase 12 is the coherence pass, not the first pass.**
 Every phase that makes a network call adds its trace and token-count at the time it is
-written. Phase 11 makes it coherent and dashboards it. Retrofitting instrumentation
+written. Phase 12 makes it coherent and dashboards it. Retrofitting instrumentation
 across a finished codebase is the reason it usually doesn't happen.
 
 **5. Cost is tracked from the first Azure resource.** Phase 4 sets an Azure budget with
-alerts. Phase 12 turns running actuals into a model and projections — it is analysis of
+alerts. Phase 13 turns running actuals into a model and projections — it is analysis of
 data already being collected, not a from-scratch investigation.
 
 **6. The README's claims are the tripwire.** It states this project has measured
-retrieval quality, a cost model, and documented failure behavior. Any of those still
-unbuilt must be visibly marked pending in the README. An unmarked false claim in a
-public repo is a real cost, which is the point.
+retrieval quality, measured groundedness, a cost model, and documented failure
+behavior. Any of those still unbuilt must be visibly marked pending in the README. An
+unmarked false claim in a public repo is a real cost, which is the point.
 
 ## Running practice: decision records
 
