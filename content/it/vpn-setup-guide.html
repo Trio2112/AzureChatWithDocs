@@ -10,34 +10,99 @@
 
   <h2>Overview</h2>
   <p>
-    Contoso uses GlobalProtect to provide secure remote access to internal systems.
-    This guide covers installing the client, connecting for the first time, and
-    troubleshooting common connection issues. All remote employees are required to use
-    the VPN when accessing internal resources, per the HR remote work policy.
+    Contoso uses GlobalProtect to provide secure remote access to internal systems,
+    including source control, internal wikis, and HR systems. This guide covers
+    installing the client, connecting for the first time, understanding how traffic is
+    routed while connected, and troubleshooting common connection issues. All remote
+    employees are required to use the VPN when accessing internal resources, per the
+    Remote Work Policy and the Acceptable Use and Security Policy.
+  </p>
+
+  <h2>Prerequisites</h2>
+  <ul>
+    <li>A Contoso-issued laptop with the standard software image installed.</li>
+    <li>An active corporate email account and password.</li>
+    <li>The Microsoft Authenticator app installed on your phone for multi-factor
+      authentication.</li>
+    <li>A stable internet connection of at least 10 Mbps.</li>
+  </ul>
+  <p>
+    If you are a new hire and have not yet received your laptop or completed initial
+    account setup, see the New Hire IT Equipment and Software Setup guide before
+    proceeding with VPN configuration.
   </p>
 
   <h2>Installing the client</h2>
   <p>
     Download the GlobalProtect installer from the software portal at
-    software.contoso.internal. Run the installer with default settings. When prompted
-    for a gateway address, enter vpn.contoso.internal. Restart your laptop after
-    installation completes.
+    software.contoso.internal. Windows users should run <code>GlobalProtect64.msi</code>
+    with default settings; macOS users should run <code>GlobalProtect.pkg</code>. When
+    prompted for a gateway address during first launch, enter
+    <code>vpn.contoso.internal</code>. Restart your laptop after installation
+    completes to ensure the network extension loads correctly.
   </p>
 
-  <h2>Connecting</h2>
+  <h2>Connecting for the first time</h2>
   <p>
-    Open GlobalProtect from the system tray and sign in with your corporate email and
-    password. You will be prompted for multi-factor authentication via the Authenticator
-    app. Once connected, the icon in your system tray turns green. Connection typically
-    takes under 15 seconds.
+    Open GlobalProtect from the system tray (Windows) or menu bar (macOS) and sign in
+    with your corporate email and password. You will be prompted for multi-factor
+    authentication via the Authenticator app on your first connection of the day.
+    Once connected, the icon in your system tray turns green and displays "Connected."
+    Connection typically takes under 15 seconds on a stable network.
+  </p>
+  <p>
+    The first time you connect, GlobalProtect will also install a root certificate that
+    allows the client to inspect traffic for security purposes. This is expected
+    behavior and required for compliance with our security policy.
+  </p>
+
+  <h2>How traffic is routed</h2>
+  <p>
+    By default, Contoso's VPN configuration disables split-tunneling, meaning all
+    network traffic from your device is routed through the corporate network while
+    connected, not just traffic destined for internal systems. This allows security
+    monitoring to apply consistently regardless of where you are working from, but it
+    also means general web browsing may feel slightly slower while connected. This is
+    expected and should not be worked around by disconnecting the VPN during work
+    hours.
   </p>
 
   <h2>Troubleshooting</h2>
+  <h3>"Unable to connect" error</h3>
   <p>
-    If the client shows "Unable to connect," first confirm you have an active internet
-    connection outside the VPN. If the problem persists, clear the client's cached
-    credentials via Settings &gt; Reset, then reconnect. For persistent failures, open
-    a ticket with the IT help desk and include the error code shown in the client logs.
+    First confirm you have an active internet connection independent of the VPN (for
+    example, by loading a public website). If your internet connection is fine but the
+    VPN still won't connect, restart the GlobalProtect client from the system tray menu.
+  </p>
+  <h3>Client hangs on "Connecting..."</h3>
+  <p>
+    This is usually caused by a stale cached credential. Clear the client's cached
+    credentials via Settings &gt; Reset, then reconnect and re-authenticate from
+    scratch. If the issue persists after a reset, restart your laptop.
+  </p>
+  <h3>MFA prompt never arrives</h3>
+  <p>
+    Confirm your phone has a working internet or cellular connection, since
+    Authenticator push notifications require connectivity. If no prompt arrives within
+    two minutes, open the Authenticator app manually and check for a pending request
+    under the Contoso entry.
+  </p>
+  <h3>Connected, but internal sites won't load</h3>
+  <p>
+    Confirm the tray icon shows "Connected" and not "Connecting" or "Disconnected."
+    If connected but sites still fail to load, try disconnecting and reconnecting once.
+    Persistent failures across multiple internal sites usually indicate a gateway
+    issue on our end rather than a problem with your device — check the IT status
+    page before opening a ticket.
+  </p>
+
+  <h2>Getting further help</h2>
+  <p>
+    For persistent failures not resolved by the steps above, open a ticket with the IT
+    help desk through the process described in the Help Desk Ticketing and Support
+    Guide, and include the error code shown in the client logs (Settings &gt;
+    Troubleshooting &gt; Collect Logs). Standard VPN connectivity issues are handled
+    within our normal Severity 3 SLA.
   </p>
 </body>
 </html>

@@ -72,16 +72,19 @@ future sessions per the roadmap above.
 5. `docs/roadmap.md`: the same phase table, as our shared syllabus/checklist we tick off
    session by session.
 
-### Phase 1 — Mock corpus (collaborative, not solo)
+### Phase 1 — Mock corpus
+
+**Update (2026-08-16):** Brent doesn't want to spend time authoring sample documents —
+it's not valuable study time. I write the full corpus; he reviews and steers.
 
 1. Create `content/hr/` and `content/it/` folders.
-2. I write **one** example HTML doc in each folder to establish a consistent structure
-   (title, headings, short paragraphs — realistic enough that chunking choices later
-   actually matter).
-3. Explicitly hand off to Brent to draft at least 2-3 more documents himself (I'll
-   suggest topics that deliberately overlap — e.g. an HR "remote work policy" and an IT
-   "VPN setup guide" both mention VPN, so later we can see whether semantic search
-   correctly disambiguates). I will not write the whole corpus myself.
+2. I write realistic-length HTML docs (500-1000+ words, multiple `<h2>`/`<h3>`
+   sections, lists, and at least a couple of tables) across both folders, with
+   deliberate topic overlaps across HR/IT so later we can see semantic search
+   disambiguate intent (e.g. remote work policy vs. VPN setup guide both mention VPN;
+   code of conduct vs. acceptable use policy both mention confidentiality/data
+   handling).
+3. Brent reviews and asks for revisions/additions as needed.
 4. No manifest/metadata file yet — that's introduced in Phase 2 when we design chunking
    and need per-doc IDs.
 

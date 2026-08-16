@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Help Desk Ticketing and Support Guide</title>
+  <meta name="category" content="IT">
+</head>
+<body>
+  <h1>Help Desk Ticketing and Support Guide</h1>
+
+  <h2>Overview</h2>
+  <p>
+    This guide explains how to get IT support at Contoso, how tickets are prioritized,
+    and what response times to expect. Many common issues can be resolved faster
+    through self-service than by opening a ticket — check the relevant guide first.
+  </p>
+
+  <h2>Before opening a ticket</h2>
+  <p>
+    For the most common issues, self-service resources resolve the problem faster than
+    waiting for a ticket response:
+  </p>
+  <ul>
+    <li>Forgotten password or MFA issues — see the Password Reset and Account
+      Security Guide.</li>
+    <li>VPN connection problems — see the troubleshooting section of the VPN Setup
+      Guide.</li>
+    <li>New equipment or software requests — use the IT asset request form referenced
+      in the New Hire IT Equipment and Software Setup guide.</li>
+    <li>General outages — check the IT status page at status.contoso.internal before
+      opening a ticket, since widespread issues are already being tracked there.</li>
+  </ul>
+
+  <h2>Submitting a ticket</h2>
+  <p>
+    Open a ticket at helpdesk.contoso.internal or by emailing
+    support@contoso.internal, which automatically creates a ticket. Include your
+    device name (found in Settings &gt; About), a description of the issue, and any
+    error codes or screenshots. Tickets with more detail are resolved faster because
+    they avoid a back-and-forth clarification round.
+  </p>
+
+  <h2>Severity levels and response times</h2>
+  <table>
+    <thead>
+      <tr><th>Severity</th><th>Definition</th><th>Examples</th><th>First response SLA</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Severity 1 (Critical)</td>
+        <td>Security incident or complete inability to work</td>
+        <td>Suspected account compromise, lost/stolen laptop, production outage</td>
+        <td>30 minutes, 24/7</td>
+      </tr>
+      <tr>
+        <td>Severity 2 (High)</td>
+        <td>Major function impaired, no workaround</td>
+        <td>Cannot access email, VPN completely down for multiple users</td>
+        <td>2 business hours</td>
+      </tr>
+      <tr>
+        <td>Severity 3 (Normal)</td>
+        <td>Standard issue with a workaround available</td>
+        <td>Individual VPN connectivity issue, single application error</td>
+        <td>1 business day</td>
+      </tr>
+      <tr>
+        <td>Severity 4 (Low)</td>
+        <td>Requests and minor issues</td>
+        <td>Software installation request, peripheral request</td>
+        <td>3 business days</td>
+      </tr>
+    </tbody>
+  </table>
+  <p>
+    Severity is initially set by the requester when submitting the ticket and may be
+    adjusted by the help desk team after triage. If you believe your ticket's severity
+    was set incorrectly, reply in the ticket thread rather than opening a duplicate
+    ticket.
+  </p>
+
+  <h2>Escalation</h2>
+  <p>
+    If a ticket has not received a response within its SLA window, reply to the ticket
+    and cc your manager. For Severity 1 issues specifically, you may also call the
+    24/7 IT emergency line listed on the IT status page in addition to opening a
+    ticket — do not rely on the emergency line alone, since a ticket is still needed
+    for tracking and follow-up.
+  </p>
+
+  <h2>After-hours support</h2>
+  <p>
+    Standard help desk hours are Monday-Friday, 7:00 AM-7:00 PM local time. Outside
+    these hours, only Severity 1 issues (security incidents, complete outages) are
+    actively staffed; Severity 2-4 tickets submitted after hours are picked up at the
+    start of the next business day.
+  </p>
+
+  <h2>New hire support</h2>
+  <p>
+    Tickets related to new-hire equipment or account setup delays should be flagged
+    with the "new hire" tag when submitted, which routes them to an expedited queue
+    given their time sensitivity relative to a new employee's start date. See the New
+    Hire IT Equipment and Software Setup guide for what's normally provisioned before
+    day one.
+  </p>
+</body>
+</html>
