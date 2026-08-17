@@ -173,7 +173,9 @@ These are as much a deliverable as the code.
 The template is the AngleSharp supply-chain review in
 [`docs/plans/phase-2-chunking.md`](plans/phase-2-chunking.md): what was chosen, what was
 rejected and why, what the measured data said, what risk remains and why it was
-acceptable. Code shows what was built; these show why, and they are the artifact that
+acceptable. [`build-vs-buy-chunking.md`](plans/build-vs-buy-chunking.md) is the second
+example — why this project writes a chunker when Azure AI Search would provide one free,
+which four phases the managed path would absorb, and what would reverse the decision. Code shows what was built; these show why, and they are the artifact that
 survives when the code is regenerated.
 
 ## Key decisions (see plan docs for full rationale)

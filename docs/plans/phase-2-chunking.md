@@ -81,6 +81,17 @@ lockfile below: what we pin cannot change underneath us.
 but no `net10.0` target, no commit SHA in its nuspec, and it is a lenient DOM-ish
 parser rather than a spec-compliant HTML5 one.
 
+### Why build a chunker at all
+
+Managed chunking exists and is mature — Azure AI Search's Text Split skill is free, and
+integrated vectorization would absorb four of this roadmap's phases. That question is
+answered separately in [`build-vs-buy-chunking.md`](build-vs-buy-chunking.md). Summary:
+Cosmos DB has no ingestion pipeline so the architecture forecloses the managed path;
+Text Split has no structure-aware mode, and structure is this design's entire premise;
+and evaluating a managed option you have never implemented is not evaluation. That
+record also states plainly what this chunker will *not* do — survive contact with PDFs —
+and what would replace it in a real deployment.
+
 ## Approach
 
 Pipeline, all in `src/Shared/Chunking/`:
